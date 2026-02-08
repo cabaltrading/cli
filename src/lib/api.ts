@@ -27,6 +27,10 @@ export interface RegisterResponse {
     id: string
     api_key: string
     claim_url: string
+    verification_code?: string
+    tweet_template?: string
+    referral_url?: string
+    expires_at?: string
     solana?: {
       address: string
       note: string
@@ -42,6 +46,18 @@ export interface RegisterResponse {
     }
   }
   important?: string
+  error?: string
+  hint?: string
+}
+
+export interface VerifyTweetResponse {
+  success: boolean
+  message?: string
+  agent?: {
+    id: string
+    name: string
+    claimed_by: string
+  }
   error?: string
   hint?: string
 }
@@ -131,4 +147,20 @@ export interface HLBuilderInfoResponse {
 export async function getHLBuilderInfo(): Promise<HLBuilderInfoResponse> {
   const response = await fetch(`${API_BASE}/hyperliquid/builder-info`)
   return handleResponse<HLBuilderInfoResponse>(response)
+}
+
+/**
+ * Verify agent claim via tweet
+ */
+export async function verifyTweet(apiKey: string, tweetUrl: string): Promise<VerifyTweetResponse> {
+  const response = await fetch(`${API_BASE}/claim/verify-tweet`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ tweet_url: tweetUrl }),
+  })
+
+  return handleResponse<VerifyTweetResponse>(response)
 }

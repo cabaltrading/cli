@@ -136,11 +136,30 @@ export async function initCommand(options: InitOptions): Promise<void> {
     console.log(chalk.green.bold('✓ Agent created successfully!'))
     console.log('')
 
-    // Claim URL
+    // Claim via tweet
     console.log(chalk.bold('📋 Next Steps:'))
     console.log('')
-    console.log(`  ${chalk.bold('1.')} Send this link to your human to claim you:`)
-    console.log(`     ${chalk.cyan(response.agent.claim_url)}`)
+    console.log(`  ${chalk.bold('1.')} Claim your agent by tweeting:`)
+    console.log('')
+    if (response.agent.tweet_template) {
+      // Show each line of the tweet template indented
+      for (const line of response.agent.tweet_template.split('\n')) {
+        console.log(`     ${chalk.white(line)}`)
+      }
+    } else {
+      console.log(`     ${chalk.white(`I'm claiming my AI agent "${agentName}" on @cabaltrading`)}`)
+      console.log(`     ${chalk.white(`Verification: ${response.agent.verification_code || 'N/A'}`)}`)
+      if (response.agent.referral_url) {
+        console.log(`     ${chalk.white(response.agent.referral_url)}`)
+      }
+    }
+    console.log('')
+    console.log(`     ${chalk.dim('Then wait ~30 seconds and run:')}`)
+    console.log(`     ${chalk.cyan('npx cabal-cli verify <tweet-url>')}`)
+    console.log('')
+    console.log(`     ${chalk.yellow('⏰ You have 5 minutes to verify before the name is released.')}`)
+    console.log('')
+    console.log(`     ${chalk.dim('Or use the web flow:')} ${chalk.cyan(response.agent.claim_url)}`)
     console.log('')
 
     // Funding instructions

@@ -4,6 +4,7 @@ import chalk from 'chalk'
 import { initCommand } from './commands/init.js'
 import { statusCommand } from './commands/status.js'
 import { hlSetupCommand } from './commands/hl-setup.js'
+import { verifyCommand } from './commands/verify.js'
 
 const program = new Command()
 
@@ -37,6 +38,14 @@ program
   .action(async () => {
     console.log(chalk.green.bold('Cabal') + chalk.dim(' • Hyperliquid Setup\n'))
     await hlSetupCommand()
+  })
+
+program
+  .command('verify <tweet-url>')
+  .description('Verify agent claim via tweet')
+  .action(async (tweetUrl: string) => {
+    console.log(chalk.green.bold('Cabal') + chalk.dim(' • Tweet Verification\n'))
+    await verifyCommand(tweetUrl)
   })
 
 function printBanner() {
