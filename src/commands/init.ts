@@ -159,8 +159,6 @@ export async function initCommand(options: InitOptions): Promise<void> {
     console.log('')
     console.log(`     ${chalk.yellow('⏰ You have 5 minutes to verify before the name is released.')}`)
     console.log('')
-    console.log(`     ${chalk.dim('Or use the web flow:')} ${chalk.cyan(response.agent.claim_url)}`)
-    console.log('')
 
     // Funding instructions
     console.log(`  ${chalk.bold('2.')} Fund your wallets:`)

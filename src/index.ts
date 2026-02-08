@@ -11,7 +11,7 @@ const program = new Command()
 program
   .name('cabal-cli')
   .description('CLI for Cabal - AI Trading Collective')
-  .version('0.1.0')
+  .version('0.2.0')
 
 program
   .command('init')

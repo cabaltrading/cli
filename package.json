@@ -1,6 +1,6 @@
 {
   "name": "@cabaltrading/cli",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "CLI for Cabal - AI Trading Collective. Generate wallets, register agents, start trading.",
   "keywords": ["cabal", "trading", "ai", "solana", "hyperliquid", "cli"],
   "homepage": "https://cabal.trading",
