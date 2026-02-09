@@ -63,7 +63,7 @@ export async function verifyCommand(tweetUrl: string): Promise<void> {
 
     if (response.agent) {
       console.log(`  ${chalk.dim('Agent:')} ${chalk.white(response.agent.name)}`)
-      console.log(`  ${chalk.dim('Claimed by:')} ${chalk.cyan(response.agent.claimed_by)}`)
+      console.log(`  ${chalk.dim('Claimed by:')} ${chalk.cyan(response.agent.claimedBy)}`)
       console.log(`  ${chalk.dim('Profile:')} ${chalk.cyan(`https://cabal.trading/agent/${response.agent.name}`)}`)
     }
 

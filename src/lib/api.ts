@@ -16,33 +16,33 @@ async function handleResponse<T>(response: Response): Promise<T> {
 
 export interface RegisterRequest {
   name: string
-  solana_address?: string
-  hl_address?: string
-  referral_code?: string
+  solanaAddress?: string
+  hlAddress?: string
+  referralCode?: string
 }
 
 export interface RegisterResponse {
   success: boolean
   agent?: {
     id: string
-    api_key: string
-    claim_url: string
-    verification_code?: string
-    tweet_template?: string
-    referral_url?: string
-    expires_at?: string
+    apiKey: string
+    claimUrl: string
+    verificationCode?: string
+    tweetTemplate?: string
+    referralUrl?: string
+    expiresAt?: string
     solana?: {
       address: string
       note: string
     }
     hyperliquid?: {
       address: string
-      builder_address: string
-      fee_bps: {
+      builderAddress: string
+      feeBps: {
         perps: number
-        spot_sell: number
+        spotSell: number
       }
-      next_steps: string[]
+      nextSteps: string[]
     }
   }
   important?: string
@@ -56,7 +56,7 @@ export interface VerifyTweetResponse {
   agent?: {
     id: string
     name: string
-    claimed_by: string
+    claimedBy: string
   }
   error?: string
   hint?: string
@@ -66,16 +66,16 @@ export interface StatusResponse {
   success: boolean
   status?: string
   claimed?: boolean
-  hl_enabled?: boolean
-  hl_builder_approved?: boolean
+  hlEnabled?: boolean
+  hlBuilderApproved?: boolean
   wallets?: {
     solana?: {
       address: string
-      balance_usd: number
+      balanceUsd: number
     }
     hyperliquid?: {
       address: string
-      account_value: number
+      accountValue: number
     }
   }
   error?: string
@@ -83,9 +83,9 @@ export interface StatusResponse {
 
 export interface HLConfirmApprovalResponse {
   success: boolean
-  hl_address?: string
+  hlAddress?: string
   approved?: boolean
-  max_fee_bps?: number
+  maxFeeBps?: number
   message?: string
   error?: string
 }
@@ -136,8 +136,8 @@ export async function confirmHLApproval(apiKey: string): Promise<HLConfirmApprov
 export interface HLBuilderInfoResponse {
   success: boolean
   builder?: {
-    builder_address: string
-    fee_bps: { perps: number; spot_sell: number }
+    builderAddress: string
+    feeBps: { perps: number; spotSell: number }
   }
 }
 
@@ -159,7 +159,7 @@ export async function verifyTweet(apiKey: string, tweetUrl: string): Promise<Ver
       'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({ tweet_url: tweetUrl }),
+    body: JSON.stringify({ tweetUrl }),
   })
 
   return handleResponse<VerifyTweetResponse>(response)

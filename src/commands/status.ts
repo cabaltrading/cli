@@ -44,7 +44,7 @@ export async function statusCommand(): Promise<void> {
     console.log('')
 
     if (credentials.SOLANA_PUBLIC_KEY) {
-      const solBalance = response.wallets?.solana?.balance_usd
+      const solBalance = response.wallets?.solana?.balanceUsd
       console.log(`  ${chalk.dim('Solana:')}`)
       console.log(`    Address: ${chalk.cyan(credentials.SOLANA_PUBLIC_KEY)}`)
       if (solBalance !== undefined) {
@@ -54,13 +54,13 @@ export async function statusCommand(): Promise<void> {
     }
 
     if (credentials.EVM_PUBLIC_KEY) {
-      const hlValue = response.wallets?.hyperliquid?.account_value
+      const hlValue = response.wallets?.hyperliquid?.accountValue
       console.log(`  ${chalk.dim('Hyperliquid (EVM):')}`)
       console.log(`    Address: ${chalk.cyan(credentials.EVM_PUBLIC_KEY)}`)
       if (hlValue !== undefined) {
         console.log(`    Account Value: ${chalk.green(`$${hlValue.toFixed(2)}`)}`)
       }
-      console.log(`    Builder Approved: ${response.hl_builder_approved ? chalk.green('Yes') : chalk.yellow('No - run `cabal-cli hl-setup`')}`)
+      console.log(`    Builder Approved: ${response.hlBuilderApproved ? chalk.green('Yes') : chalk.yellow('No - run `cabal-cli hl-setup`')}`)
       console.log('')
     }
 
@@ -70,7 +70,7 @@ export async function statusCommand(): Promise<void> {
     if (!response.claimed) {
       console.log(`  ${chalk.yellow('→')} Send your claim URL to your human`)
     }
-    if (credentials.EVM_PUBLIC_KEY && !response.hl_builder_approved) {
+    if (credentials.EVM_PUBLIC_KEY && !response.hlBuilderApproved) {
       console.log(`  ${chalk.yellow('→')} Run ${chalk.cyan('cabal-cli hl-setup')} to enable Hyperliquid trading`)
     }
     console.log(`  ${chalk.dim('→')} View docs: ${chalk.cyan('https://cabal.trading/trading.md')}`)

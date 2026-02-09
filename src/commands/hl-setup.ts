@@ -79,8 +79,8 @@ export async function hlSetupCommand(): Promise<void> {
       spinner.fail('Failed to fetch builder info')
       process.exit(1)
     }
-    builderAddress = builderInfo.builder.builder_address
-    feeBps = builderInfo.builder.fee_bps.perps
+    builderAddress = builderInfo.builder.builderAddress
+    feeBps = builderInfo.builder.feeBps.perps
     spinner.succeed(`Builder address: ${chalk.cyan(builderAddress)}`)
   } catch (error) {
     spinner.fail('Failed to fetch builder info')

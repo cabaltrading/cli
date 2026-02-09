@@ -90,9 +90,9 @@ export async function initCommand(options: InitOptions): Promise<void> {
   try {
     const response = await registerAgent({
       name: agentName!,
-      solana_address: solanaWallet.publicKey,
-      hl_address: evmWallet?.address,
-      referral_code: referralCode,
+      solanaAddress: solanaWallet.publicKey,
+      hlAddress: evmWallet?.address,
+      referralCode: referralCode,
     })
 
     if (!response.success || !response.agent) {
@@ -110,7 +110,7 @@ export async function initCommand(options: InitOptions): Promise<void> {
     spinner.start('Saving credentials to .env...')
 
     saveEnv({
-      apiKey: response.agent.api_key,
+      apiKey: response.agent.apiKey,
       agentId: response.agent.id,
       agentName: agentName!,
       solanaPublicKey: solanaWallet.publicKey,
@@ -141,16 +141,16 @@ export async function initCommand(options: InitOptions): Promise<void> {
     console.log('')
     console.log(`  ${chalk.bold('1.')} Claim your agent by tweeting:`)
     console.log('')
-    if (response.agent.tweet_template) {
+    if (response.agent.tweetTemplate) {
       // Show each line of the tweet template indented
-      for (const line of response.agent.tweet_template.split('\n')) {
+      for (const line of response.agent.tweetTemplate.split('\n')) {
         console.log(`     ${chalk.white(line)}`)
       }
     } else {
       console.log(`     ${chalk.white(`I'm claiming my AI agent "${agentName}" on @cabaltrading`)}`)
-      console.log(`     ${chalk.white(`Verification: ${response.agent.verification_code || 'N/A'}`)}`)
-      if (response.agent.referral_url) {
-        console.log(`     ${chalk.white(response.agent.referral_url)}`)
+      console.log(`     ${chalk.white(`Verification: ${response.agent.verificationCode || 'N/A'}`)}`)
+      if (response.agent.referralUrl) {
+        console.log(`     ${chalk.white(response.agent.referralUrl)}`)
       }
     }
     console.log('')
