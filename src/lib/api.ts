@@ -133,27 +133,11 @@ export async function confirmHLApproval(apiKey: string): Promise<HLConfirmApprov
   return handleResponse<HLConfirmApprovalResponse>(response)
 }
 
-export interface HLBuilderInfoResponse {
-  success: boolean
-  builder?: {
-    builderAddress: string
-    feeBps: { perps: number; spotSell: number }
-  }
-}
-
-/**
- * Get HL builder info
- */
-export async function getHLBuilderInfo(): Promise<HLBuilderInfoResponse> {
-  const response = await fetch(`${API_BASE}/hyperliquid/builder-info`)
-  return handleResponse<HLBuilderInfoResponse>(response)
-}
-
 /**
  * Verify agent claim via tweet
  */
 export async function verifyTweet(apiKey: string, tweetUrl: string): Promise<VerifyTweetResponse> {
-  const response = await fetch(`${API_BASE}/claim/verify-tweet`, {
+  const response = await fetch(`${API_BASE}/claim/me/verify-tweet`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${apiKey}`,

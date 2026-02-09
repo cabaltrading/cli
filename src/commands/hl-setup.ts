@@ -3,7 +3,8 @@ import ora from 'ora'
 import inquirer from 'inquirer'
 import { privateKeyToAccount } from 'viem/accounts'
 import { getCredentials, isConfigured } from '../lib/env.js'
-import { confirmHLApproval, getHLBuilderInfo } from '../lib/api.js'
+import { confirmHLApproval } from '../lib/api.js'
+import { getBuilderInfo } from '@cabal/hyperliquid'
 
 // Testnet mode: set HL_TESTNET=true to use testnet
 const IS_TESTNET = process.env.HL_TESTNET === 'true'
@@ -70,23 +71,10 @@ export async function hlSetupCommand(): Promise<void> {
   // Get builder info
   const spinner = ora('Fetching builder info...').start()
 
-  let builderAddress: string
-  let feeBps: number
-
-  try {
-    const builderInfo = await getHLBuilderInfo()
-    if (!builderInfo.success || !builderInfo.builder) {
-      spinner.fail('Failed to fetch builder info')
-      process.exit(1)
-    }
-    builderAddress = builderInfo.builder.builderAddress
-    feeBps = builderInfo.builder.feeBps.perps
-    spinner.succeed(`Builder address: ${chalk.cyan(builderAddress)}`)
-  } catch (error) {
-    spinner.fail('Failed to fetch builder info')
-    console.error(chalk.red(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`))
-    process.exit(1)
-  }
+  const builderInfo = getBuilderInfo()
+  const builderAddress = builderInfo.builder_address
+  const feeBps = builderInfo.fee_bps.perps
+  spinner.succeed(`Builder address: ${chalk.cyan(builderAddress)}`)
 
   // Check HL account balance
   spinner.start('Checking Hyperliquid account...')
