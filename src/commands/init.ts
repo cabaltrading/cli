@@ -1,17 +1,10 @@
 import chalk from 'chalk'
 import ora from 'ora'
 import inquirer from 'inquirer'
-import { generateSolanaWallet, generateEvmWallet, truncateAddress } from '../lib/wallet.js'
-import { registerAgent } from '../lib/api.js'
-import { saveEnv, isConfigured, isEnvInGitignore, ensureEnvInGitignore } from '../lib/env.js'
+import { CabalClient } from '../lib/client.js'
+import { saveEnv, isConfigured, ensureEnvInGitignore, isEnvInGitignore } from '../lib/env.js'
 
-interface InitOptions {
-  ref?: string
-  name?: string
-  hl?: boolean
-}
-
-export async function initCommand(options: InitOptions): Promise<void> {
+export async function initCommand(apiKeyArg?: string): Promise<void> {
   // Check if already configured
   if (isConfigured()) {
     const { overwrite } = await inquirer.prompt([
@@ -29,94 +22,51 @@ export async function initCommand(options: InitOptions): Promise<void> {
     }
   }
 
-  // Get agent name
-  let agentName = options.name
-  if (!agentName) {
+  // Get API key
+  let apiKey = apiKeyArg
+  if (!apiKey) {
     const answers = await inquirer.prompt([
       {
-        type: 'input',
-        name: 'name',
-        message: 'Agent name:',
+        type: 'password',
+        name: 'apiKey',
+        message: 'API key (from https://cabal.trading/dashboard):',
+        mask: '*',
         validate: (input: string) => {
-          if (!input || input.length < 3) {
-            return 'Name must be at least 3 characters'
-          }
-          if (input.length > 32) {
-            return 'Name must be at most 32 characters'
-          }
-          if (!/^[a-zA-Z0-9_]+$/.test(input)) {
-            return 'Name can only contain letters, numbers, and underscores'
-          }
+          if (!input) return 'API key is required'
+          if (!input.startsWith('cabal_')) return 'API key must start with "cabal_"'
           return true
         },
       },
     ])
-    agentName = answers.name
+    apiKey = answers.apiKey
   }
 
-  // Get referral code
-  let referralCode = options.ref
-  if (!referralCode) {
-    const answers = await inquirer.prompt([
-      {
-        type: 'input',
-        name: 'referralCode',
-        message: 'Referral code (optional, press Enter to skip):',
-      },
-    ])
-    referralCode = answers.referralCode || undefined
+  // Validate prefix before hitting network
+  if (!apiKey!.startsWith('cabal_')) {
+    console.log(chalk.red('Error: API key must start with "cabal_"'))
+    console.log(chalk.dim('Get your API key at https://cabal.trading/dashboard'))
+    process.exit(1)
   }
-
-  const includeHl = options.hl !== false
 
   console.log('')
 
-  // Generate wallets
-  const spinner = ora('Generating Solana wallet...').start()
-
-  const solanaWallet = generateSolanaWallet()
-  spinner.succeed(`Solana wallet: ${chalk.cyan(truncateAddress(solanaWallet.publicKey, 6))}`)
-
-  let evmWallet = null
-  if (includeHl) {
-    spinner.start('Generating EVM wallet (for Hyperliquid)...')
-    evmWallet = generateEvmWallet()
-    spinner.succeed(`EVM wallet: ${chalk.cyan(truncateAddress(evmWallet.address, 6))}`)
-  }
-
-  // Register with Cabal
-  spinner.start('Registering with Cabal...')
+  // Validate with server
+  const spinner = ora('Validating API key...').start()
 
   try {
-    const response = await registerAgent({
-      name: agentName!,
-      solanaAddress: solanaWallet.publicKey,
-      hlAddress: evmWallet?.address,
-      referralCode: referralCode,
-    })
+    const client = new CabalClient(apiKey!)
+    const response = await client.getStatus()
 
-    if (!response.success || !response.agent) {
-      spinner.fail(chalk.red('Registration failed'))
-      console.log(chalk.red(`Error: ${response.error}`))
-      if (response.hint) {
-        console.log(chalk.yellow(`Hint: ${response.hint}`))
-      }
-      process.exit(1)
-    }
+    spinner.succeed('API key validated!')
 
-    spinner.succeed('Registered with Cabal!')
+    const agent = response.agent
 
     // Save credentials
     spinner.start('Saving credentials to .env...')
 
     saveEnv({
-      apiKey: response.agent.apiKey,
-      agentId: response.agent.id,
-      agentName: agentName!,
-      solanaPublicKey: solanaWallet.publicKey,
-      solanaPrivateKey: solanaWallet.privateKey,
-      evmPublicKey: evmWallet?.address,
-      evmPrivateKey: evmWallet?.privateKey,
+      apiKey: apiKey!,
+      agentName: agent.name,
     })
 
     spinner.succeed('Credentials saved to .env')
@@ -128,77 +78,65 @@ export async function initCommand(options: InitOptions): Promise<void> {
     } else if (gitignoreResult.added) {
       console.log(chalk.dim('  Added .env to .gitignore'))
     } else if (!isEnvInGitignore()) {
-      console.log(chalk.yellow('  ⚠️  .env is not in .gitignore - add it to avoid committing secrets!'))
+      console.log(chalk.yellow('  Warning: .env is not in .gitignore — add it to avoid committing secrets!'))
     }
 
     // Success message
     console.log('')
-    console.log(chalk.green.bold('✓ Agent created successfully!'))
+    console.log(chalk.green.bold('Agent connected!'))
     console.log('')
 
-    // Claim via tweet
-    console.log(chalk.bold('📋 Next Steps:'))
+    // Agent info
+    console.log(`  ${chalk.dim('Name:')}     ${chalk.white(agent.name)}`)
+    console.log(`  ${chalk.dim('Status:')}   ${getStatusBadge(agent.status)}`)
+    console.log(`  ${chalk.dim('Verified:')} ${agent.verified ? chalk.green('Yes') : chalk.yellow('No')}`)
     console.log('')
-    console.log(`  ${chalk.bold('1.')} Claim your agent by tweeting:`)
-    console.log('')
-    if (response.agent.tweetTemplate) {
-      // Show each line of the tweet template indented
-      for (const line of response.agent.tweetTemplate.split('\n')) {
-        console.log(`     ${chalk.white(line)}`)
-      }
-    } else {
-      console.log(`     ${chalk.white(`I'm claiming my AI agent "${agentName}" on @cabaltrading`)}`)
-      console.log(`     ${chalk.white(`Verification: ${response.agent.verificationCode || 'N/A'}`)}`)
-      if (response.agent.referralUrl) {
-        console.log(`     ${chalk.white(response.agent.referralUrl)}`)
-      }
+
+    // Wallets
+    if (agent.solanaAddress) {
+      console.log(`  ${chalk.dim('Solana:')}   ${chalk.cyan(agent.solanaAddress)}`)
+    }
+    if (agent.hlAddress) {
+      console.log(`  ${chalk.dim('EVM/HL:')}   ${chalk.cyan(agent.hlAddress)}`)
     }
     console.log('')
-    console.log(`     ${chalk.dim('Then wait ~30 seconds and run:')}`)
-    console.log(`     ${chalk.cyan('npx cabal-cli verify <tweet-url>')}`)
-    console.log('')
-    console.log(`     ${chalk.yellow('⏰ You have 5 minutes to verify before the name is released.')}`)
-    console.log('')
 
-    // Funding instructions
-    console.log(`  ${chalk.bold('2.')} Fund your wallets:`)
-    console.log(`     ${chalk.dim('Solana:')} ${chalk.cyan(solanaWallet.publicKey)}`)
-    console.log(`     ${chalk.dim('        Send SOL for trading on Jupiter')}`)
-
-    if (evmWallet) {
-      console.log(`     ${chalk.dim('EVM:')}    ${chalk.cyan(evmWallet.address)}`)
-      console.log(`     ${chalk.dim('        Bridge USDC to Hyperliquid via')} ${chalk.cyan('https://app.hyperliquid.xyz/bridge')}`)
+    // PnL summary
+    if (agent.totalValueUsd > 0) {
+      console.log(`  ${chalk.dim('Value:')}    ${chalk.green(`$${agent.totalValueUsd.toFixed(2)}`)}`)
+      console.log(`  ${chalk.dim('PnL 24h:')} ${formatPnl(agent.pnl24h, agent.pnl24hPercent)}`)
     }
-
     console.log('')
 
-    // HL setup reminder
-    if (evmWallet) {
-      console.log(`  ${chalk.bold('3.')} After funding, approve Cabal's builder fee:`)
-      console.log(`     ${chalk.cyan('npx cabal-cli hl-setup')}`)
-      console.log('')
-    }
-
-    // Trading
-    const step = evmWallet ? '4.' : '3.'
-    console.log(`  ${chalk.bold(step)} Start trading!`)
-    console.log(`     ${chalk.dim('Docs:')} ${chalk.cyan('https://cabal.trading/trading.md')}`)
+    console.log(chalk.dim('Run `cabal-cli status` to check balances.'))
     console.log('')
-
-    // Security warning
-    console.log(chalk.yellow.bold('⚠️  IMPORTANT: Your private keys are saved in .env'))
-    console.log(chalk.yellow('   Keep this file safe and never share it!'))
-    console.log('')
-
-    // Referral info
-    if (referralCode) {
-      console.log(chalk.dim(`Referred by: ${referralCode} (you get 10% fee discount)`))
-      console.log('')
-    }
 
   } catch (error) {
-    spinner.fail(chalk.red('Registration failed'))
+    spinner.fail(chalk.red('Failed to validate API key'))
     console.error(chalk.red(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`))
+    console.log('')
+    console.log(chalk.dim('Check your API key at https://cabal.trading/dashboard'))
     process.exit(1)
   }
+}
+
+function getStatusBadge(status: string): string {
+  switch (status) {
+    case 'active':
+      return chalk.green('Active')
+    case 'pending':
+      return chalk.yellow('Pending')
+    case 'suspended':
+      return chalk.red('Suspended')
+    case 'liquidated':
+      return chalk.red('Liquidated')
+    default:
+      return chalk.dim(status)
+  }
+}
+
+function formatPnl(value: number, percent: number): string {
+  const sign = value >= 0 ? '+' : ''
+  const color = value >= 0 ? chalk.green : chalk.red
+  return color(`${sign}$${value.toFixed(2)} (${sign}${percent.toFixed(1)}%)`)
 }

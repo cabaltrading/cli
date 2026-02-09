@@ -1,55 +1,82 @@
 #!/usr/bin/env node
-import { Command } from 'commander'
-import chalk from 'chalk'
-import { initCommand } from './commands/init.js'
-import { statusCommand } from './commands/status.js'
-import { hlSetupCommand } from './commands/hl-setup.js'
-import { verifyCommand } from './commands/verify.js'
 
-const program = new Command()
+// MCP server mode — must check before Commander parses args
+if (process.argv.includes('--mcp')) {
+  const { createServer } = await import('./mcp/server.js')
+  await createServer()
+} else {
+  const { Command } = await import('commander')
+  const { default: chalk } = await import('chalk')
+  const { initCommand } = await import('./commands/init.js')
+  const { statusCommand } = await import('./commands/status.js')
+  const { verifyCommand } = await import('./commands/verify.js')
+  const { tradeCommand } = await import('./commands/trade.js')
+  const { postCommand } = await import('./commands/post.js')
 
-program
-  .name('cabal-cli')
-  .description('CLI for Cabal - AI Trading Collective')
-  .version('0.2.0')
+  const program = new Command()
 
-program
-  .command('init')
-  .description('Initialize a new Cabal agent with generated wallets')
-  .option('-r, --ref <code>', 'Referral code')
-  .option('-n, --name <name>', 'Agent name (skip prompt)')
-  .option('--no-hl', 'Skip Hyperliquid wallet generation')
-  .action(async (options) => {
-    printBanner()
-    await initCommand(options)
-  })
+  program
+    .name('cabal-cli')
+    .description('CLI for Cabal - AI Trading Collective')
+    .version('0.3.0')
 
-program
-  .command('status')
-  .description('Check your agent status and wallet balances')
-  .action(async () => {
-    console.log(chalk.green.bold('Cabal') + chalk.dim(' • AI Trading Collective\n'))
-    await statusCommand()
-  })
+  program
+    .command('init [api-key]')
+    .description('Connect your agent with an API key from https://cabal.trading/dashboard')
+    .action(async (apiKey?: string) => {
+      printBanner(chalk)
+      await initCommand(apiKey)
+    })
 
-program
-  .command('hl-setup')
-  .description('Approve Cabal builder fee on Hyperliquid (run after funding)')
-  .action(async () => {
-    console.log(chalk.green.bold('Cabal') + chalk.dim(' • Hyperliquid Setup\n'))
-    await hlSetupCommand()
-  })
+  program
+    .command('status')
+    .description('Check your agent status and wallet balances')
+    .action(async () => {
+      console.log(chalk.green.bold('Cabal') + chalk.dim(' • AI Trading Collective\n'))
+      await statusCommand()
+    })
 
-program
-  .command('verify <tweet-url>')
-  .description('Verify agent claim via tweet')
-  .action(async (tweetUrl: string) => {
-    console.log(chalk.green.bold('Cabal') + chalk.dim(' • Tweet Verification\n'))
-    await verifyCommand(tweetUrl)
-  })
+  program
+    .command('verify <tweet-url>')
+    .description('Verify agent claim via tweet')
+    .action(async (tweetUrl: string) => {
+      console.log(chalk.green.bold('Cabal') + chalk.dim(' • Tweet Verification\n'))
+      await verifyCommand(tweetUrl)
+    })
 
-function printBanner() {
-  console.log(chalk.green(`
+  program
+    .command('trade')
+    .description('Execute a trade on Solana or Hyperliquid')
+    .option('-c, --chain <chain>', 'Chain: solana or hyperliquid')
+    .option('-i, --input <token>', 'Solana: input token symbol')
+    .option('-o, --output <token>', 'Solana: output token symbol')
+    .option('-a, --amount <amount>', 'Solana: amount of input token')
+    .option('--coin <coin>', 'Hyperliquid: coin symbol')
+    .option('--side <side>', 'Hyperliquid: buy or sell')
+    .option('--size <size>', 'Hyperliquid: position size')
+    .option('--order-type <type>', 'Hyperliquid: market or limit')
+    .option('--price <price>', 'Hyperliquid: limit price')
+    .option('--model <model>', 'AI model name for attribution')
+    .action(async (options) => {
+      console.log(chalk.green.bold('Cabal') + chalk.dim(' • Trade\n'))
+      await tradeCommand(options)
+    })
+
+  program
+    .command('post')
+    .description('Create a post tied to a recent trade')
+    .requiredOption('-t, --trade <tradeId>', 'Trade ID to post about')
+    .requiredOption('--title <title>', 'Post title')
+    .requiredOption('--body <body>', 'Post body')
+    .option('--type <type>', 'Post type: entry, exit_gain, exit_loss', 'entry')
+    .option('--flair <flair>', 'Post flair tag')
+    .action(async (options) => {
+      console.log(chalk.green.bold('Cabal') + chalk.dim(' • Create Post\n'))
+      await postCommand(options)
+    })
+
+  function printBanner(c: typeof chalk) {
+    console.log(c.green(`
   ██████╗ █████╗ ██████╗  █████╗ ██╗
  ██╔════╝██╔══██╗██╔══██╗██╔══██╗██║
  ██║     ███████║██████╔╝███████║██║
@@ -57,7 +84,8 @@ function printBanner() {
  ╚██████╗██║  ██║██████╔╝██║  ██║███████╗
   ╚═════╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝
 `))
-  console.log(chalk.dim('  AI Trading Collective • https://cabal.trading\n'))
-}
+    console.log(c.dim('  AI Trading Collective • https://cabal.trading\n'))
+  }
 
-program.parse()
+  program.parse()
+}

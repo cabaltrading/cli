@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import ora from 'ora'
-import { getAgentStatus } from '../lib/api.js'
+import { CabalClient } from '../lib/client.js'
 import { getCredentials, isConfigured } from '../lib/env.js'
 
 
@@ -21,59 +21,60 @@ export async function statusCommand(): Promise<void> {
   const spinner = ora('Fetching agent status...').start()
 
   try {
-    const response = await getAgentStatus(credentials.CABAL_API_KEY)
-
-    if (!response.success) {
-      spinner.fail(chalk.red('Failed to fetch status'))
-      console.log(chalk.red(`Error: ${response.error}`))
-      process.exit(1)
-    }
+    const client = new CabalClient(credentials.CABAL_API_KEY)
+    const response = await client.getStatus(true)
 
     spinner.stop()
+
+    const agent = response.agent
 
     // Agent info
     console.log(chalk.bold('Agent Status'))
     console.log('')
-    console.log(`  ${chalk.dim('Name:')}    ${credentials.CABAL_AGENT_NAME || 'Unknown'}`)
-    console.log(`  ${chalk.dim('Status:')}  ${getStatusBadge(response.status || 'unknown')}`)
-    console.log(`  ${chalk.dim('Claimed:')} ${response.claimed ? chalk.green('Yes') : chalk.yellow('No - send claim URL to your human')}`)
+    console.log(`  ${chalk.dim('Name:')}     ${agent.name}`)
+    console.log(`  ${chalk.dim('Status:')}   ${getStatusBadge(agent.status)}`)
+    console.log(`  ${chalk.dim('Verified:')} ${agent.verified ? chalk.green('Yes') : chalk.yellow('No — connect X on dashboard')}`)
     console.log('')
 
-    // Wallets
+    // Wallets (addresses from server)
     console.log(chalk.bold('Wallets'))
     console.log('')
 
-    if (credentials.SOLANA_PUBLIC_KEY) {
-      const solBalance = response.wallets?.solana?.balanceUsd
+    if (agent.solanaAddress) {
+      const solWallet = response.wallets?.solana
       console.log(`  ${chalk.dim('Solana:')}`)
-      console.log(`    Address: ${chalk.cyan(credentials.SOLANA_PUBLIC_KEY)}`)
-      if (solBalance !== undefined) {
-        console.log(`    Balance: ${chalk.green(`$${solBalance.toFixed(2)}`)}`)
+      console.log(`    Address: ${chalk.cyan(agent.solanaAddress)}`)
+      if (solWallet) {
+        console.log(`    Balance: ${chalk.green(`$${solWallet.balanceUsd.toFixed(2)}`)}`)
       }
       console.log('')
     }
 
-    if (credentials.EVM_PUBLIC_KEY) {
-      const hlValue = response.wallets?.hyperliquid?.accountValue
+    if (agent.hlAddress) {
+      const hlWallet = response.wallets?.hyperliquid
       console.log(`  ${chalk.dim('Hyperliquid (EVM):')}`)
-      console.log(`    Address: ${chalk.cyan(credentials.EVM_PUBLIC_KEY)}`)
-      if (hlValue !== undefined) {
-        console.log(`    Account Value: ${chalk.green(`$${hlValue.toFixed(2)}`)}`)
+      console.log(`    Address: ${chalk.cyan(agent.hlAddress)}`)
+      if (hlWallet) {
+        console.log(`    Account Value: ${chalk.green(`$${hlWallet.balanceUsd.toFixed(2)}`)}`)
       }
-      console.log(`    Builder Approved: ${response.hlBuilderApproved ? chalk.green('Yes') : chalk.yellow('No - run `cabal-cli hl-setup`')}`)
       console.log('')
     }
+
+    // PnL
+    console.log(chalk.bold('Performance'))
+    console.log('')
+    console.log(`  ${chalk.dim('Total Value:')} ${chalk.white(`$${agent.totalValueUsd.toFixed(2)}`)}`)
+    console.log(`  ${chalk.dim('PnL 24h:')}     ${formatPnl(agent.pnl24h, agent.pnl24hPercent)}`)
+    console.log(`  ${chalk.dim('PnL 7d:')}      ${formatPnl(agent.pnl7d, agent.pnl7dPercent)}`)
+    console.log(`  ${chalk.dim('PnL All:')}     ${formatPnl(agent.pnlAllTime, agent.pnlAllTimePercent)}`)
+    console.log('')
 
     // Quick actions
-    console.log(chalk.bold('Quick Actions'))
-    console.log('')
-    if (!response.claimed) {
-      console.log(`  ${chalk.yellow('→')} Send your claim URL to your human`)
+    if (!agent.verified) {
+      console.log(chalk.yellow('Tip: Connect your X account at https://cabal.trading/dashboard'))
+      console.log('')
     }
-    if (credentials.EVM_PUBLIC_KEY && !response.hlBuilderApproved) {
-      console.log(`  ${chalk.yellow('→')} Run ${chalk.cyan('cabal-cli hl-setup')} to enable Hyperliquid trading`)
-    }
-    console.log(`  ${chalk.dim('→')} View docs: ${chalk.cyan('https://cabal.trading/trading.md')}`)
+    console.log(`  ${chalk.dim('Docs:')} ${chalk.cyan('https://cabal.trading/trading.md')}`)
     console.log('')
 
   } catch (error) {
@@ -96,4 +97,10 @@ function getStatusBadge(status: string): string {
     default:
       return chalk.dim(status)
   }
+}
+
+function formatPnl(value: number, percent: number): string {
+  const sign = value >= 0 ? '+' : ''
+  const color = value >= 0 ? chalk.green : chalk.red
+  return color(`${sign}$${value.toFixed(2)} (${sign}${percent.toFixed(1)}%)`)
 }

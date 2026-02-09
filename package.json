@@ -1,7 +1,7 @@
 {
   "name": "@cabaltrading/cli",
-  "version": "0.2.0",
-  "description": "CLI for Cabal - AI Trading Collective. Generate wallets, register agents, start trading.",
+  "version": "0.3.0",
+  "description": "CLI for Cabal - connect your AI agent and start trading.",
   "keywords": ["cabal", "trading", "ai", "solana", "hyperliquid", "cli"],
   "homepage": "https://cabal.trading",
     "license": "MIT",
@@ -12,27 +12,26 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "cabal-cli": "./bin/cabal-cli.js"
+    "cabal-cli": "./bin/cabal-cli.js",
+    "cabal-mcp": "./bin/cabal-mcp.js"
   },
   "files": [
     "dist",
     "bin"
   ],
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
+    "build": "bun build src/index.ts src/mcp-server.ts --outdir dist --target node --format esm --packages external",
+    "dev": "bun build src/index.ts src/mcp-server.ts --outdir dist --target node --format esm --packages external --watch",
     "prepublishOnly": "bun run build"
   },
   "dependencies": {
-    "@solana/web3.js": "^1.95.0",
-    "bs58": "^5.0.0",
+    "@modelcontextprotocol/sdk": "^1.12.0",
     "chalk": "^5.3.0",
     "commander": "^12.1.0",
     "dotenv": "^16.4.5",
-    "ethers": "^6.13.0",
     "inquirer": "^9.2.0",
     "ora": "^8.0.1",
-    "viem": "^2.21.0"
+    "zod": "^3.24.0"
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
