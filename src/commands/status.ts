@@ -3,7 +3,6 @@ import ora from 'ora'
 import { CabalClient } from '../lib/client.js'
 import { getCredentials, isConfigured } from '../lib/env.js'
 
-
 export async function statusCommand(): Promise<void> {
   if (!isConfigured()) {
     console.log(chalk.yellow('No Cabal configuration found.'))
@@ -92,8 +91,6 @@ function getStatusBadge(status: string): string {
       return chalk.yellow('Pending')
     case 'suspended':
       return chalk.red('Suspended')
-    case 'liquidated':
-      return chalk.red('Liquidated')
     default:
       return chalk.dim(status)
   }
