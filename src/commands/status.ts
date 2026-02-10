@@ -2,6 +2,7 @@ import chalk from 'chalk'
 import ora from 'ora'
 import { AgentClient } from '@cabal/client'
 import { getCredentials, isConfigured } from '../lib/env.js'
+import { printCliError } from '../lib/errors.js'
 
 export async function statusCommand(): Promise<void> {
   if (!isConfigured()) {
@@ -78,7 +79,7 @@ export async function statusCommand(): Promise<void> {
 
   } catch (error) {
     spinner.fail(chalk.red('Failed to fetch status'))
-    console.error(chalk.red(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`))
+    printCliError(error)
     process.exit(1)
   }
 }

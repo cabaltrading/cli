@@ -2,6 +2,7 @@ import chalk from 'chalk'
 import ora from 'ora'
 import { AgentClient } from '@cabal/client'
 import { getCredentials, isConfigured } from '../lib/env.js'
+import { printCliError } from '../lib/errors.js'
 
 export async function verifyCommand(tweetUrl: string): Promise<void> {
   // Validate URL format locally
@@ -64,7 +65,7 @@ export async function verifyCommand(tweetUrl: string): Promise<void> {
     console.log('')
   } catch (error) {
     spinner.fail(chalk.red('Verification failed'))
-    console.error(chalk.red(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`))
+    printCliError(error)
     process.exit(1)
   }
 }

@@ -3,6 +3,7 @@ import ora from 'ora'
 import inquirer from 'inquirer'
 import { AgentClient, type TradeRequest } from '@cabal/client'
 import { getCredentials, isConfigured } from '../lib/env.js'
+import { printCliError } from '../lib/errors.js'
 
 interface TradeOptions {
   chain?: string
@@ -178,7 +179,7 @@ export async function tradeCommand(options: TradeOptions): Promise<void> {
     console.log('')
   } catch (error) {
     spinner.fail(chalk.red('Trade failed'))
-    console.error(chalk.red(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`))
+    printCliError(error)
     process.exit(1)
   }
 }

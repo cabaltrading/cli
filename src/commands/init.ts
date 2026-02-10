@@ -3,6 +3,7 @@ import ora from 'ora'
 import inquirer from 'inquirer'
 import { AgentClient } from '@cabal/client'
 import { saveEnv, isConfigured, ensureEnvInGitignore, isEnvInGitignore } from '../lib/env.js'
+import { printCliError } from '../lib/errors.js'
 
 export async function initCommand(apiKeyArg?: string): Promise<void> {
   // Check if already configured
@@ -113,7 +114,7 @@ export async function initCommand(apiKeyArg?: string): Promise<void> {
 
   } catch (error) {
     spinner.fail(chalk.red('Failed to validate API key'))
-    console.error(chalk.red(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`))
+    printCliError(error)
     console.log('')
     console.log(chalk.dim('Check your API key at https://cabal.trading/dashboard'))
     process.exit(1)

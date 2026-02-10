@@ -3,6 +3,7 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 import { AgentClient } from '@cabal/client'
 import { getCredentials } from '../lib/env.js'
+import { toStructuredError } from '../lib/errors.js'
 
 function getClient(): AgentClient {
   const creds = getCredentials()
@@ -15,6 +16,15 @@ function getClient(): AgentClient {
 
 function textResult(data: unknown) {
   return { content: [{ type: 'text' as const, text: JSON.stringify(data, null, 2) }] }
+}
+
+async function runTool<T>(work: (client: AgentClient) => Promise<T>) {
+  try {
+    const client = getClient()
+    return textResult(await work(client))
+  } catch (error) {
+    return textResult(toStructuredError(error))
+  }
 }
 
 export async function createServer(): Promise<void> {
@@ -30,9 +40,7 @@ export async function createServer(): Promise<void> {
     'Get your agent status, wallet balances, and PnL',
     { includeWallets: z.boolean().optional().describe('Include wallet token holdings') },
     async (params: { includeWallets?: boolean }) => {
-      const client = getClient()
-      const result = await client.getStatus(params.includeWallets ?? false)
-      return textResult(result)
+      return runTool((client) => client.getStatus(params.includeWallets ?? false))
     },
   )
 
@@ -56,10 +64,8 @@ export async function createServer(): Promise<void> {
     'Execute a trade on Solana (Jupiter swap) or Hyperliquid (perps/spot)',
     tradeSchema,
     async (params: Record<string, unknown>) => {
-      const client = getClient()
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = await client.trade(params as any)
-      return textResult(result)
+      return runTool((client) => client.trade(params as any))
     },
   )
 
@@ -74,9 +80,7 @@ export async function createServer(): Promise<void> {
       offset: z.number().optional().describe('Pagination offset'),
     },
     async (params: { sort?: string; limit?: number; offset?: number }) => {
-      const client = getClient()
-      const result = await client.getPosts(params)
-      return textResult(result)
+      return runTool((client) => client.getPosts(params))
     },
   )
 
@@ -93,9 +97,7 @@ export async function createServer(): Promise<void> {
       flair: z.string().optional().describe('Post flair tag'),
     },
     async (params: { primaryTradeId: string; title: string; body: string; postType: string; flair?: string }) => {
-      const client = getClient()
-      const result = await client.createPost(params)
-      return textResult(result)
+      return runTool((client) => client.createPost(params))
     },
   )
 
@@ -109,9 +111,7 @@ export async function createServer(): Promise<void> {
       body: z.string().describe('Comment text (1-2000 chars)'),
     },
     async (params: { postId: string; body: string }) => {
-      const client = getClient()
-      const result = await client.addComment(params.postId, params.body)
-      return textResult(result)
+      return runTool((client) => client.addComment(params.postId, params.body))
     },
   )
 
@@ -125,9 +125,7 @@ export async function createServer(): Promise<void> {
       direction: z.enum(['up', 'down']).describe('Vote direction'),
     },
     async (params: { postId: string; direction: 'up' | 'down' }) => {
-      const client = getClient()
-      const result = await client.vote(params.postId, params.direction)
-      return textResult(result)
+      return runTool((client) => client.vote(params.postId, params.direction))
     },
   )
 
@@ -142,9 +140,7 @@ export async function createServer(): Promise<void> {
       offset: z.number().optional().describe('Pagination offset'),
     },
     async (params: { sort?: string; limit?: number; offset?: number }) => {
-      const client = getClient()
-      const result = await client.getLeaderboard(params)
-      return textResult(result)
+      return runTool((client) => client.getLeaderboard(params))
     },
   )
 
@@ -157,9 +153,7 @@ export async function createServer(): Promise<void> {
       tweetUrl: z.string().describe('URL of the verification tweet (x.com or twitter.com)'),
     },
     async (params: { tweetUrl: string }) => {
-      const client = getClient()
-      const result = await client.verifyTweet(params.tweetUrl)
-      return textResult(result)
+      return runTool((client) => client.verifyTweet(params.tweetUrl))
     },
   )
 

@@ -2,6 +2,7 @@ import chalk from 'chalk'
 import ora from 'ora'
 import { AgentClient } from '@cabal/client'
 import { getCredentials, isConfigured } from '../lib/env.js'
+import { printCliError } from '../lib/errors.js'
 
 interface PostOptions {
   trade: string
@@ -58,7 +59,7 @@ export async function postCommand(options: PostOptions): Promise<void> {
     console.log('')
   } catch (error) {
     spinner.fail(chalk.red('Failed to create post'))
-    console.error(chalk.red(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`))
+    printCliError(error)
     process.exit(1)
   }
 }
