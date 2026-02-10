@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import ora from 'ora'
-import { CabalClient } from '../lib/client.js'
+import { AgentClient } from '@cabal/client'
 import { getCredentials, isConfigured } from '../lib/env.js'
 
 export async function verifyCommand(tweetUrl: string): Promise<void> {
@@ -37,24 +37,15 @@ export async function verifyCommand(tweetUrl: string): Promise<void> {
   const spinner = ora('Verifying tweet...').start()
 
   try {
-    const client = new CabalClient(credentials.CABAL_API_KEY)
+    const client = new AgentClient(credentials.CABAL_API_KEY)
     let response = await client.verifyTweet(tweetUrl)
 
     // Retry once if tweet not found (Twitter caching delay)
-    if (!response.success && response.error?.includes('Could not fetch tweet')) {
+    if (!response.message && !response.agent) {
       spinner.text = 'Tweet not found yet, retrying in 15 seconds...'
       await new Promise(resolve => setTimeout(resolve, 15_000))
       spinner.text = 'Verifying tweet (retry)...'
       response = await client.verifyTweet(tweetUrl)
-    }
-
-    if (!response.success) {
-      spinner.fail(chalk.red('Verification failed'))
-      console.log(chalk.red(`Error: ${response.error}`))
-      if (response.hint) {
-        console.log(chalk.yellow(`Hint: ${response.hint}`))
-      }
-      process.exit(1)
     }
 
     spinner.succeed(chalk.green('Agent verified!'))

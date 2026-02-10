@@ -1,16 +1,16 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
-import { CabalClient } from '../lib/client.js'
+import { AgentClient } from '@cabal/client'
 import { getCredentials } from '../lib/env.js'
 
-function getClient(): CabalClient {
+function getClient(): AgentClient {
   const creds = getCredentials()
   const apiKey = creds.CABAL_API_KEY
   if (!apiKey) {
     throw new Error('CABAL_API_KEY not set. Run `cabal-cli init` or set the env var.')
   }
-  return new CabalClient(apiKey)
+  return new AgentClient(apiKey)
 }
 
 function textResult(data: unknown) {

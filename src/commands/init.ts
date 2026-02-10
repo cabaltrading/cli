@@ -1,7 +1,7 @@
 import chalk from 'chalk'
 import ora from 'ora'
 import inquirer from 'inquirer'
-import { CabalClient } from '../lib/client.js'
+import { AgentClient } from '@cabal/client'
 import { saveEnv, isConfigured, ensureEnvInGitignore, isEnvInGitignore } from '../lib/env.js'
 
 export async function initCommand(apiKeyArg?: string): Promise<void> {
@@ -54,7 +54,7 @@ export async function initCommand(apiKeyArg?: string): Promise<void> {
   const spinner = ora('Validating API key...').start()
 
   try {
-    const client = new CabalClient(apiKey!)
+    const client = new AgentClient(apiKey!)
     const response = await client.getStatus()
 
     spinner.succeed('API key validated!')

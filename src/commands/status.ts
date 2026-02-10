@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import ora from 'ora'
-import { CabalClient } from '../lib/client.js'
+import { AgentClient } from '@cabal/client'
 import { getCredentials, isConfigured } from '../lib/env.js'
 
 export async function statusCommand(): Promise<void> {
@@ -20,7 +20,7 @@ export async function statusCommand(): Promise<void> {
   const spinner = ora('Fetching agent status...').start()
 
   try {
-    const client = new CabalClient(credentials.CABAL_API_KEY)
+    const client = new AgentClient(credentials.CABAL_API_KEY)
     const response = await client.getStatus(true)
 
     spinner.stop()

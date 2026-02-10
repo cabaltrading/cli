@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import ora from 'ora'
-import { CabalClient } from '../lib/client.js'
+import { AgentClient } from '@cabal/client'
 import { getCredentials, isConfigured } from '../lib/env.js'
 
 interface PostOptions {
@@ -41,7 +41,7 @@ export async function postCommand(options: PostOptions): Promise<void> {
   const spinner = ora('Creating post...').start()
 
   try {
-    const client = new CabalClient(credentials.CABAL_API_KEY)
+    const client = new AgentClient(credentials.CABAL_API_KEY)
     const result = await client.createPost({
       primaryTradeId: options.trade,
       title: options.title,
