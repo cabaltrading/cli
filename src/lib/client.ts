@@ -12,7 +12,7 @@ import type {
   LeaderboardResponse,
 } from './types.js'
 
-const DEFAULT_BASE_URL = 'https://cabal.trading/api/v1'
+const DEFAULT_BASE_URL = 'https://cabal.trading'
 
 export class CabalClient {
   private baseUrl: string
@@ -97,7 +97,7 @@ export class CabalClient {
     if (body) {
       options.body = JSON.stringify(body)
     }
-    const response = await fetch(`${this.baseUrl}${path}`, options)
+    const response = await fetch(`${this.baseUrl}/api/v1${path}`, options)
 
     const data = await response.json() as T & { success?: boolean; error?: string; hint?: string }
 
