@@ -80,7 +80,7 @@ export class AppClientError extends Error {
 
 // ── BaseClient ───────────────────────────────────────────────────────
 
-const DEFAULT_SITE_URL = 'https://cabal.trading'
+const DEFAULT_SITE_URL = 'https://cabal-trading-staging.cabal-trading.workers.dev'
 const API_PREFIX = '/api/v1'
 
 type RequestOptions = {

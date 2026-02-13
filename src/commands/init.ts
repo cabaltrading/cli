@@ -4,6 +4,7 @@ import inquirer from 'inquirer'
 import { AgentClient } from '../client.js'
 import { saveEnv, isConfigured, ensureEnvInGitignore, isEnvInGitignore } from '../lib/env.js'
 import { printCliError } from '../lib/errors.js'
+import { openBrowser, SIGNUP_URL, DASHBOARD_URL } from '../lib/browser.js'
 
 export async function initCommand(apiKeyArg?: string): Promise<void> {
   // Check if already configured
@@ -23,18 +24,68 @@ export async function initCommand(apiKeyArg?: string): Promise<void> {
     }
   }
 
-  // Get API key
+  // Get API key — guide new users through signup if they don't have one
   let apiKey = apiKeyArg
   if (!apiKey) {
+    console.log(chalk.bold('  Welcome to Cabal'))
+    console.log('')
+    console.log('  To connect your agent, you need an API key.')
+    console.log('  If you already have one, paste it below.')
+    console.log('')
+
+    const { hasKey } = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'hasKey',
+        message: 'Do you have an API key?',
+        choices: [
+          { name: 'Yes — paste my key', value: 'yes' },
+          { name: 'No — sign me up', value: 'no' },
+        ],
+      },
+    ])
+
+    if (hasKey === 'no') {
+      console.log('')
+      console.log(chalk.bold('  Quick setup:'))
+      console.log('')
+      console.log(`  ${chalk.dim('1.')} Sign up / log in at the link below`)
+      console.log(`  ${chalk.dim('2.')} Copy your API key from the dashboard`)
+      console.log(`  ${chalk.dim('3.')} Come back here and paste it`)
+      console.log('')
+
+      const { shouldOpen } = await inquirer.prompt([
+        {
+          type: 'confirm',
+          name: 'shouldOpen',
+          message: `Open ${SIGNUP_URL} in your browser?`,
+          default: true,
+        },
+      ])
+
+      if (shouldOpen) {
+        const opened = await openBrowser(SIGNUP_URL)
+        if (opened) {
+          console.log(chalk.dim('\n  Browser opened. Complete signup, then come back here.\n'))
+        } else {
+          console.log(chalk.dim(`\n  Could not open browser. Go to: ${chalk.cyan(SIGNUP_URL)}\n`))
+        }
+      } else {
+        console.log(chalk.dim(`\n  Go to: ${chalk.cyan(SIGNUP_URL)}\n`))
+      }
+
+      console.log(chalk.dim('  Once you have your key, paste it below.\n'))
+    }
+
     const answers = await inquirer.prompt([
       {
         type: 'password',
         name: 'apiKey',
-        message: 'API key (from https://cabal.trading/dashboard):',
+        message: 'API key:',
         mask: '*',
         validate: (input: string) => {
           if (!input) return 'API key is required'
-          if (!input.startsWith('cabal_')) return 'API key must start with "cabal_"'
+          if (!input.startsWith('cabal_')) return 'API key must start with "cabal_" — copy it from your dashboard'
           return true
         },
       },
@@ -45,7 +96,7 @@ export async function initCommand(apiKeyArg?: string): Promise<void> {
   // Validate prefix before hitting network
   if (!apiKey!.startsWith('cabal_')) {
     console.log(chalk.red('Error: API key must start with "cabal_"'))
-    console.log(chalk.dim('Get your API key at https://cabal.trading/dashboard'))
+    console.log(chalk.dim(`Get your API key at ${DASHBOARD_URL}`))
     process.exit(1)
   }
 
@@ -116,7 +167,7 @@ export async function initCommand(apiKeyArg?: string): Promise<void> {
     spinner.fail(chalk.red('Failed to validate API key'))
     printCliError(error)
     console.log('')
-    console.log(chalk.dim('Check your API key at https://cabal.trading/dashboard'))
+    console.log(chalk.dim(`Check your API key at ${DASHBOARD_URL}`))
     process.exit(1)
   }
 }

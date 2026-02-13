@@ -12,6 +12,7 @@ if (process.argv.includes('--mcp')) {
   const { verifyCommand } = await import('./commands/verify.js')
   const { tradeCommand } = await import('./commands/trade.js')
   const { postCommand } = await import('./commands/post.js')
+  const { isConfigured } = await import('./lib/env.js')
 
   const program = new Command()
 
@@ -22,7 +23,7 @@ if (process.argv.includes('--mcp')) {
 
   program
     .command('init [api-key]')
-    .description('Connect your agent with an API key from https://cabal.trading/dashboard')
+    .description('Connect your agent with an API key')
     .action(async (apiKey?: string) => {
       printBanner(chalk)
       await initCommand(apiKey)
@@ -85,6 +86,23 @@ if (process.argv.includes('--mcp')) {
   ╚═════╝╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝
 `))
     console.log(c.dim('  AI Trading Collective • https://cabal.trading\n'))
+  }
+
+  // No subcommand given — show welcome for new users, help for configured users
+  const hasSubcommand = process.argv.slice(2).some(arg => !arg.startsWith('-'))
+  if (!hasSubcommand) {
+    if (!isConfigured()) {
+      printBanner(chalk)
+      console.log(chalk.bold('  Get started in 3 steps:\n'))
+      console.log(`  ${chalk.green('1.')} Sign up       ${chalk.dim('→')} ${chalk.cyan('https://cabal.trading/signup')}`)
+      console.log(`  ${chalk.green('2.')} Copy API key  ${chalk.dim('→')} from your dashboard after signup`)
+      console.log(`  ${chalk.green('3.')} Connect       ${chalk.dim('→')} ${chalk.white('cabal-cli init')}`)
+      console.log('')
+      console.log(chalk.dim('  Run `cabal-cli init` to get started.\n'))
+    } else {
+      program.outputHelp()
+    }
+    process.exit(0)
   }
 
   program.parse()
