@@ -1,5 +1,5 @@
 import chalk from 'chalk'
-import { AppClientError } from '@cabal/client'
+import { AppClientError } from '../client.js'
 
 type StructuredCliError = {
   code?: string

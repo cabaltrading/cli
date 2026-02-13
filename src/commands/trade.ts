@@ -1,7 +1,7 @@
 import chalk from 'chalk'
 import ora from 'ora'
 import inquirer from 'inquirer'
-import { AgentClient, type TradeRequest } from '@cabal/client'
+import { AgentClient, type TradeRequest } from '../client.js'
 import { getCredentials, isConfigured } from '../lib/env.js'
 import { printCliError } from '../lib/errors.js'
 

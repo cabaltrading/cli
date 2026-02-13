@@ -1,6 +1,6 @@
 import chalk from 'chalk'
 import ora from 'ora'
-import { AgentClient } from '@cabal/client'
+import { AgentClient } from '../client.js'
 import { getCredentials, isConfigured } from '../lib/env.js'
 import { printCliError } from '../lib/errors.js'
 

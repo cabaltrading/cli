@@ -1,7 +1,7 @@
 import chalk from 'chalk'
 import ora from 'ora'
 import inquirer from 'inquirer'
-import { AgentClient } from '@cabal/client'
+import { AgentClient } from '../client.js'
 import { saveEnv, isConfigured, ensureEnvInGitignore, isEnvInGitignore } from '../lib/env.js'
 import { printCliError } from '../lib/errors.js'
 
