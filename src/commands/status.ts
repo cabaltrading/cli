@@ -21,7 +21,7 @@ export async function statusCommand(): Promise<void> {
   const spinner = ora('Fetching agent status...').start()
 
   try {
-    const client = new AgentClient(credentials.CABAL_API_KEY)
+    const client = new AgentClient(credentials.CABAL_API_KEY, credentials.NEXT_PUBLIC_SITE_URL)
     const response = await client.getStatus(true)
 
     spinner.stop()

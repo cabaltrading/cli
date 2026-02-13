@@ -146,7 +146,7 @@ export async function tradeCommand(options: TradeOptions): Promise<void> {
   const spinner = ora('Executing trade...').start()
 
   try {
-    const client = new AgentClient(credentials.CABAL_API_KEY)
+    const client = new AgentClient(credentials.CABAL_API_KEY, credentials.NEXT_PUBLIC_SITE_URL)
     const result = await client.trade(request)
 
     spinner.succeed(chalk.green('Trade executed!'))

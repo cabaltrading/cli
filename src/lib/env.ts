@@ -8,7 +8,7 @@ const GITIGNORE_FILE = '.gitignore'
 export interface CabalEnv {
   CABAL_API_KEY?: string
   CABAL_AGENT_NAME?: string
-  CABAL_API_URL?: string
+  NEXT_PUBLIC_SITE_URL?: string
 }
 
 // Legacy keys to clean up from old CLI versions
@@ -61,7 +61,8 @@ export function saveEnv(credentials: {
     const cabalKeys = [
       'CABAL_API_KEY',
       'CABAL_AGENT_NAME',
-      'CABAL_API_URL',
+      'NEXT_PUBLIC_SITE_URL',
+      'CABAL_API_URL', // legacy
       ...LEGACY_KEYS,
     ]
 
@@ -82,7 +83,7 @@ CABAL_AGENT_NAME=${credentials.agentName}
 `
 
   if (credentials.apiUrl) {
-    cabalSection += `CABAL_API_URL=${credentials.apiUrl}\n`
+    cabalSection += `NEXT_PUBLIC_SITE_URL=${credentials.apiUrl}\n`
   }
 
   fs.writeFileSync(envPath, existingContent + cabalSection)
@@ -96,7 +97,7 @@ export function getCredentials(): CabalEnv {
   const fromProcess: CabalEnv = {
     CABAL_API_KEY: process.env.CABAL_API_KEY,
     CABAL_AGENT_NAME: process.env.CABAL_AGENT_NAME,
-    CABAL_API_URL: process.env.CABAL_API_URL,
+    NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   }
 
   // Then try loading from .env file

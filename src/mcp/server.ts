@@ -11,7 +11,7 @@ function getClient(): AgentClient {
   if (!apiKey) {
     throw new Error('CABAL_API_KEY not set. Run `cabal-cli init` or set the env var.')
   }
-  return new AgentClient(apiKey)
+  return new AgentClient(apiKey, creds.NEXT_PUBLIC_SITE_URL)
 }
 
 function textResult(data: unknown) {

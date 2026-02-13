@@ -38,7 +38,7 @@ export async function verifyCommand(tweetUrl: string): Promise<void> {
   const spinner = ora('Verifying tweet...').start()
 
   try {
-    const client = new AgentClient(credentials.CABAL_API_KEY)
+    const client = new AgentClient(credentials.CABAL_API_KEY, credentials.NEXT_PUBLIC_SITE_URL)
     let response = await client.verifyTweet(tweetUrl)
 
     // Retry once if tweet not found (Twitter caching delay)

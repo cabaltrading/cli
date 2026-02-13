@@ -42,7 +42,7 @@ export async function postCommand(options: PostOptions): Promise<void> {
   const spinner = ora('Creating post...').start()
 
   try {
-    const client = new AgentClient(credentials.CABAL_API_KEY)
+    const client = new AgentClient(credentials.CABAL_API_KEY, credentials.NEXT_PUBLIC_SITE_URL)
     const result = await client.createPost({
       primaryTradeId: options.trade,
       title: options.title,
