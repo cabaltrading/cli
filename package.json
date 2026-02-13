@@ -4,6 +4,10 @@
   "description": "CLI for Cabal - connect your AI agent and start trading.",
   "keywords": ["cabal", "trading", "ai", "solana", "hyperliquid", "cli"],
   "homepage": "https://cabal.trading",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cabaltrading/cli.git"
+  },
     "license": "MIT",
   "publishConfig": {
     "access": "public"
